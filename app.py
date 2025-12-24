@@ -9,9 +9,11 @@ def init_connection():
         user=st.secrets["tidb"]["user"],
         password=st.secrets["tidb"]["password"],
         database=st.secrets["tidb"]["database"],
-        ssl_verify_cert=True  # Penting untuk keamanan cloud
+        autocommit=True,
+        # Menggunakan ssl_disabled=False memastikan SSL aktif 
+        # tanpa harus mencari file .pem secara manual
+        ssl_disabled=False 
     )
-
 conn = init_connection()
 
 # Query contoh
