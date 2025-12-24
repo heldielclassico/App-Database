@@ -2,18 +2,15 @@ import streamlit as st
 import mysql.connector
 
 # Fungsi koneksi ke TiDB Cloud
+from sqlalchemy import create_all, create_engine
+
 def init_connection():
-    return mysql.connector.connect(
-        host=st.secrets["tidb"]["host"],
-        port=st.secrets["tidb"]["port"],
-        user=st.secrets["tidb"]["user"],
-        password=st.secrets["tidb"]["password"],
-        database=st.secrets["tidb"]["database"],
-        autocommit=True,
-        # Menggunakan ssl_disabled=False memastikan SSL aktif 
-        # tanpa harus mencari file .pem secara manual
-        ssl_disabled=False 
-    )
+    # Format URL: mysql+pymysql://user:pass@host:port/db
+    url = f"mysql+pymysql://{st.secrets['tidb']['user']}:{st.secrets['tidb']['password']}@{st.secrets['tidb']['host']}:{st.secrets['tidb']['port']}/{st.secrets['tidb']['database']}?ssl_ca=/etc/ssl/certs/ca-certificates.crt"
+    return create_engine(url)
+
+engine = init_connection()
+# Cara pakai: df = pd.read_sql("SELECT * FROM users", engine)
 conn = init_connection()
 
 # Query contoh
