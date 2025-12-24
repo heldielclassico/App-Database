@@ -1,23 +1,29 @@
 import streamlit as st
-import mysql.connector
-
-# Fungsi koneksi ke TiDB Cloud
-from sqlalchemy import create_all, create_engine
+from sqlalchemy import create_engine, text
 
 def init_connection():
-    # Format URL: mysql+pymysql://user:pass@host:port/db
-    url = f"mysql+pymysql://{st.secrets['tidb']['user']}:{st.secrets['tidb']['password']}@{st.secrets['tidb']['host']}:{st.secrets['tidb']['port']}/{st.secrets['tidb']['database']}?ssl_ca=/etc/ssl/certs/ca-certificates.crt"
-    return create_engine(url)
+    # Mengambil kredensial dari secrets
+    user = st.secrets["tidb"]["user"]
+    password = st.secrets["tidb"]["password"]
+    host = st.secrets["tidb"]["host"]
+    port = st.secrets["tidb"]["port"]
+    database = st.secrets["tidb"]["database"]
+    
+    # URL Koneksi (Menggunakan PyMySQL sebagai driver)
+    # Tanpa 'https://' dan menambahkan SSL argumen untuk TiDB
+    conn_url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}?ssl_verify_cert=true"
+    
+    return create_engine(conn_url, pool_pre_ping=True)
 
 engine = init_connection()
-# Cara pakai: df = pd.read_sql("SELECT * FROM users", engine)
-conn = init_connection()
 
-# Query contoh
-st.title("TiDB + Streamlit Connection")
-cursor = conn.cursor()
-cursor.execute("SELECT * FROM users")
-rows = cursor.fetchall()
+st.title("Aplikasi TiDB Cloud")
 
-for row in rows:
-    st.write(f"Nama: {row[1]}, Email: {row[2]}")
+# Contoh Query untuk Testing
+try:
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT NOW();"))
+        for row in result:
+            st.success(f"Koneksi Berhasil! Waktu Server: {row[0]}")
+except Exception as e:
+    st.error(f"Error: {e}")
